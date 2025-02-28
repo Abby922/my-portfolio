@@ -1,16 +1,23 @@
+
 const express = require("express");
+require("dotenv").config();
 const mongoose = require("mongoose");
 const cors = require("cors");
-require("dotenv").config();
+const MONGO_URI = process.env.MONGO_URI;
+
+
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+mongoose.connect(process.env.MONGO_URI)
+// , {
+//   useNewUrlParser: true,
+//   useUnifiedTopology: true,
+// }
+.then(() => console.log("✅ 已連接 MongoDB"))
+.catch(err => console.error("❌ MongoDB 連線失敗：", err));
 
 const ProjectSchema = new mongoose.Schema({
   title: String,
@@ -35,5 +42,19 @@ app.post("/api/projects", async (req, res) => {
   res.json(newProject);
 });
 
+const path = require("path");
+
+// 提供靜態 HTML 檔案
+app.use(express.static(path.join(__dirname,"..","frontend", "public"))); // 確保你的 HTML 放在 `public/` 資料夾
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname,"..","frontend", "public", "index.html"));
+});
+
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`🚀 伺服器運行在 http://localhost:${PORT}`);
+});
+
+const portfolioRoutes = require("./routes/portfolio");
+app.use("/portfolio", portfolioRoutes);
